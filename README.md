@@ -1,6 +1,6 @@
 # Ratatouille
 
-TODO: Write a gem description
+DSL for validation of complex Hashes
 
 ## Installation
 
@@ -18,7 +18,24 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+TODO: Flesh out documentation
+
+### Example
+```ruby
+  include Ratatouille
+  r = ratify({:foo => {:bar => {:biz => "bang"}}}) do
+    is_not_empty
+    given_key(:foo) do
+      given_key(:bar) do
+        given_key(:biz) do
+          if ratifiable_object == "bang"
+            validation_error("should be 'shoot'")
+          end
+        end
+      end
+    end
+  end
+```
 
 ## Contributing
 
