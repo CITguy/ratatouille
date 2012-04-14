@@ -1,6 +1,9 @@
-# Ratatouille [![Build Status](http://travis-ci.org/CITguy/ratatouille.png)](http://travis-ci.org/CITguy/ratatouille)
+# Ratatouille 
 
 DSL for validation of complex Hashes
+
+## Travis CI Status: 
+[![Build Status](http://travis-ci.org/CITguy/ratatouille.png)](http://travis-ci.org/CITguy/ratatouille)
 
 ## Installation
 
