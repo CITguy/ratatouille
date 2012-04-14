@@ -1,11 +1,12 @@
 module Ratatouille
 
+  # Module used to provide Hash-specific validation methods
   module HashMethods
     # Runs validation in block against object for the given key.
     #
     # @param [String, Symbol] key
     def given_key(key, &block)
-      if @ratifiable_object.has_key?(key)
+      if @ratifiable_object.has_key?(key) && block_given?
         child_object = Ratatouille::Ratifier.new(@ratifiable_object[key], &block)
         @errors[key] = child_object.errors unless child_object.valid?
       end
@@ -37,17 +38,28 @@ module Ratatouille
     # Provide a list of keys that must be present in the Hash to validate. Otherwise,
     # an error will be added.
     #
-    # @param [Array] args Array of symbols and/or strings to denote the required keys
+    # @param [Array] args Array required keys
     # @return [void]
-    def required_keys(*args, &block)
-      req_keys = args.collect{|a| String === a || Symbol === a}
+    def required_keys(*req_keys, &block)
       common_keys = (@ratifiable_object.keys & req_keys)
+
+      if @ratifiable_object.empty?
+        validation_error("Cannot find required keys in empty hash.")
+        return
+      end
+
+      if req_keys.nil? || req_keys.empty?
+        validation_error("No required keys given to compare Hash against.")
+        return
+      end
 
       unless common_keys.size == req_keys.size
         (req_keys - common_keys).each do |missed| 
           case missed
           when Symbol then validation_error("Missing :#{missed}")
           when String then validation_error("Missing #{missed}")
+          when respond_to?(:to_s)
+            validation_error("Missing #{missed.to_s}")
           end
         end
         return
@@ -67,8 +79,18 @@ module Ratatouille
     #   All other values are ignored.
     # @return [void]
     def choice_of(choice_size=1, *key_list, &block)
+      unless key_list.nil? || key_list.empty?
+        validation_error("choice_of requires a key list to choose from")
+        return
+      end
+
       unless choice_size =~ /\d+/ && choice_size > 0
-        validation_error("choice_of requires a positive integer as first argument")
+        validation_error("choice_of requires a positive integer for choice size")
+        return
+      end
+
+      unless key_list.size > choice_size
+        validation_error("Key list size for 'choice_of' should be larger than choice size. Consider using required_keys instead.")
         return
       end
       
