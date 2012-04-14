@@ -112,7 +112,12 @@ module Ratatouille
       
       common_keys = (@ratifiable_object.keys & key_list)
       unless common_keys.size == choice_size
-        choices = key_list.collect{|a| String === a || Symbol === a}
+        choices = key_list.collect{|a| 
+          case a
+          when Symbol then ":#{a}"
+          when String then "#{a}"
+          end
+        }
         validation_error("Require #{choice_size} of the following: #{choices.join(', ')}")
         return
       end
