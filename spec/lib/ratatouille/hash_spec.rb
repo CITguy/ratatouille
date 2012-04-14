@@ -62,4 +62,34 @@ describe "Ratatouille::HashMethods" do
       RatifierTest.new({:foo => "foo"}) { required_keys(:foo, :bar) }.should_not be_valid
     end
   end
+
+  describe "given_key" do
+    it "should change the scope name to default to the key if no name passed as option" do
+      n = ""
+      RatifierTest.new({:foo => "bar"}) do
+        given_key(:foo) { n = name }
+      end
+      n.should == ":foo"
+    end
+
+    it "should change the scope name when passed as an option" do
+      o = n = ""
+      RatifierTest.new({:foo => "bar"}, :name => "Outer") do
+        o = name
+        given_key(:foo, :name => "None") { n = name }
+      end
+      o.should == "Outer"
+      n.should == "None"
+    end
+
+    it "should not change the outer scope's name" do
+      o = n = ""
+      RatifierTest.new({:foo => "bar"}) do
+        given_key(:foo) { n = name }
+        o = name
+      end
+      o.should == "Hash"
+      n.should == ":foo"
+    end
+  end
 end

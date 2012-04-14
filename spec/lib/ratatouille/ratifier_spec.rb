@@ -120,4 +120,34 @@ describe Ratatouille::Ratifier do
       end
     end
   end
+
+  describe "name" do
+    it "should return the same value if called twice in a row" do
+      r = RatifierTest.new({})
+      r.name.should == r.name
+    end
+
+    it "should always return a String" do
+      RatifierTest.new({}).name.should be_a String
+    end
+
+    it "should return the class of the object if :name isn't passed into options" do
+      RatifierTest.new({}).name.should == "Hash"
+      RatifierTest.new(Object.new).name.should == "Object"
+    end
+
+    it "should return the name as passed into options of new instance" do
+      RatifierTest.new({}, :name => "Foo").name.should == "Foo"
+    end
+  end
+
+  describe "name=" do
+    it "should not change the name if passed a non-string name" do
+      r = RatifierTest.new({})
+      r.name = NilClass
+      r.name = Object.new
+      r.name = nil
+      r.name.should == 'Hash'
+    end
+  end
 end
