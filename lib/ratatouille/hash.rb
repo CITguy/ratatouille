@@ -79,13 +79,29 @@ module Ratatouille
     #   All other values are ignored.
     # @return [void]
     def choice_of(choice_size=1, *key_list, &block)
-      unless key_list.nil? || key_list.empty?
+      if key_list.nil? || key_list.empty?
         validation_error("choice_of requires a key list to choose from")
         return
       end
+      key_list.flatten!
 
-      unless choice_size =~ /\d+/ && choice_size > 0
-        validation_error("choice_of requires a positive integer for choice size")
+      # I can work with a non-zero integer or any object that responds
+      case choice_size
+      when Integer
+        unless choice_size > 0
+          validation_error("choice_of requires a positive integer for choice size")
+          return
+        end
+      else
+        unless choice_size.respond_to?(:to_i)
+          validation_error("choice_of requires an object that responds to :to_i for choice size")
+          return
+        end
+        choice_size = choice_size.to_i
+      end
+
+      unless choice_size > 0
+        validation_error("choice size for choice_of must be positive non-zero number")
         return
       end
 
