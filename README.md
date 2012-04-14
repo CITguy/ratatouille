@@ -33,6 +33,11 @@ Within a block, the ratifiable\_object method provides the object that is to be 
 This will change when using *given\_key*.
 
 
+### name
+
+Within a block, the name method provides the name of the scope. This can be used in your custom validation messages.
+
+
 
 ## Usage
 
@@ -209,6 +214,8 @@ You should use the **validation\_error** method to add your own errors to the Ra
 ### validation\_error
 
 Used to insert validation error message into the Ratifier object.
+
+* Scope name prepended to every validation error
 
 
 #### Syntax
