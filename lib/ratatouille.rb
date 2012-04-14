@@ -10,9 +10,10 @@ require "ratatouille/string"
 module Ratatouille
 
   # @param [Hash, Array] obj Object to validate
+  # @param [Hash] options
   # @return [Validatable::Ratifier]
-  def ratify(obj, &block)
-    Ratatouille::Ratifier.new(obj, &block)
+  def ratify(obj, options={}, &block)
+    Ratatouille::Ratifier.new(obj, options, &block)
   end#ratify
 
 end

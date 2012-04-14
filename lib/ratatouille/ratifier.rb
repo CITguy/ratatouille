@@ -7,9 +7,11 @@ module Ratatouille
 
     # A new instance of Ratifier
     # @param [Hash, Array] obj Object to validate
+    # @param [Hash] options
     def initialize(obj, options={}, &block)
       @errors = { "/" => [] }
       @ratifiable_object = obj
+      self.name = options[:name]
 
       case obj
       when Hash  then extend Ratatouille::HashMethods
@@ -24,6 +26,27 @@ module Ratatouille
     end#initialize
 
 
+    # Name of instance
+    #
+    # @return [String]
+    def name
+      @name ||= @ratifiable_object.class.to_s
+    end
+
+
+    # Set name of instance
+    #
+    # @param [String] namein
+    # @return [String] name of Ratatouille::Ratifier instance
+    def name=(namein)
+      case namein
+      when String
+        @name = namein unless namein.blank?
+      end
+      @name
+    end
+
+
     # Add validation error. Useful for custom validations.
     # @param [String] str
     # @param [String] context
@@ -33,10 +56,10 @@ module Ratatouille
       when String
         return if err_in.blank?
         @errors[context] = [] unless @errors[context]
-        @errors[context] << err_in
+        @errors[context] << "#{@name}: #{err_in}"
       end
     rescue Exception => e
-      @errors["/"] << e.message
+      @errors["/"] << "#{@name}: #{e.message}"
     end#validation_error
 
 
@@ -54,7 +77,7 @@ module Ratatouille
     def cleanup_errors 
       @errors = {} if errors_array.empty?
     rescue Exception => e
-      @errors["/"] << e.message
+      validation_error("#{e.message}", '/')
     end#cleanup_errors
 
 

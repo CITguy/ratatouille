@@ -5,22 +5,26 @@ module Ratatouille
     # @return [void]
     def is_empty(&block)
       unless @ratifiable_object.empty?
-        validation_error("Array is not empty")  
+        validation_error("not empty")  
         return
       end
 
       instance_eval(&block) if block_given?
+    rescue Exception => e
+      validation_error("#{e.message}")
     end#is_empty
 
 
     # @return [void]
     def is_not_empty(&block)
       if @ratifiable_object.empty?
-        validation_error("Array is empty")
+        validation_error("empty")
         return
       end
 
       instance_eval(&block) if block_given?
+    rescue Exception => e
+      validation_error("#{e.message}")
     end#is_not_empty
 
 
@@ -78,6 +82,8 @@ module Ratatouille
       end
 
       instance_eval(&block) if block_given?
+    rescue Exception => e
+      validation_error("#{e.message}")
     end#length_between
   private
 
@@ -89,7 +95,7 @@ module Ratatouille
       end
 
       unless @ratifiable_object.size >= min_size.to_i
-        validation_error("Array length must be #{min_size} or more") 
+        validation_error("length must be #{min_size} or more") 
         return false
       end
       return true
@@ -106,7 +112,7 @@ module Ratatouille
       end
 
       if @ratifiable_object.size > max_size.to_i
-        validation_error("Array length must be less than #{max_size.to_i}")
+        validation_error("length must be less than #{max_size.to_i}")
         return false
       end
 

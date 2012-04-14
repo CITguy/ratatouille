@@ -5,33 +5,42 @@ module Ratatouille
     # Runs validation in block against object for the given key.
     #
     # @param [String, Symbol] key
-    def given_key(key, &block)
+    # @param [Hash] options
+    def given_key(key, options={}, &block)
+      options[:name] = options.fetch(:name, (Symbol === key ? ":#{key}" : key.to_s) )
+
       if @ratifiable_object.has_key?(key) && block_given?
-        child_object = Ratatouille::Ratifier.new(@ratifiable_object[key], &block)
+        child_object = Ratatouille::Ratifier.new(@ratifiable_object[key], options, &block)
         @errors[key] = child_object.errors unless child_object.valid?
       end
+    rescue Exception => e
+      validation_error("#{e.message}")
     end#given_key
 
 
     # @return [void]
     def is_empty(&block)
       unless @ratifiable_object.empty?
-        validation_error("Hash is not empty")  
+        validation_error("not empty")  
         return
       end
 
       instance_eval(&block) if block_given?
+    rescue Exception => e
+      validation_error("#{e.message}")
     end#is_empty
 
 
     # @return [void]
     def is_not_empty(&block)
       if @ratifiable_object.empty?
-        validation_error("Hash is empty")      
+        validation_error("empty")      
         return
       end
 
       instance_eval(&block) if block_given?
+    rescue Exception => e
+      validation_error("#{e.message}")
     end#is_not_empty
 
 
@@ -44,12 +53,12 @@ module Ratatouille
       common_keys = (@ratifiable_object.keys & req_keys)
 
       if @ratifiable_object.empty?
-        validation_error("Cannot find required keys in empty hash.")
+        validation_error("Cannot find required keys")
         return
       end
 
       if req_keys.nil? || req_keys.empty?
-        validation_error("No required keys given to compare Hash against.")
+        validation_error("No required keys given to compare against.")
         return
       end
 
@@ -66,6 +75,8 @@ module Ratatouille
       end
 
       instance_eval(&block) if block_given?
+    rescue Exception => e
+      validation_error("#{e.message}")
     end#required_keys
 
 
@@ -123,6 +134,8 @@ module Ratatouille
       end
 
       instance_eval(&block) if block_given?
+    rescue Exception => e
+      validation_error("#{e.message}")
     end#choice_of
   end#HashMethods
 
