@@ -16,7 +16,7 @@ module Ratatouille
       when Array then extend Ratatouille::ArrayMethods
       end
 
-      instance_eval(&block) if block_given?
+      instance_eval( &block ) if block_given?
 
       cleanup_errors
 
@@ -28,11 +28,13 @@ module Ratatouille
     # @param [String] str
     # @param [String] context
     # @return [void]
-    def validation_error(str="", context="/")
-      return unless str.respond_to?(:to_s)
-      return if str.to_s.chomp == ''
-      @errors[context] = [] unless @errors[context]
-      @errors[context] << str.to_s
+    def validation_error(err_in, context="/")
+      case err_in
+      when String
+        return if err_in.blank?
+        @errors[context] = [] unless @errors[context]
+        @errors[context] << err_in
+      end
     rescue Exception => e
       @errors["/"] << e.message
     end#validation_error
@@ -50,9 +52,7 @@ module Ratatouille
     #
     # @return [void]
     def cleanup_errors 
-      if errors_array.empty?
-        @errors = {}
-      end
+      @errors = {} if errors_array.empty?
     rescue Exception => e
       @errors["/"] << e.message
     end#cleanup_errors
