@@ -1,3 +1,4 @@
 module Ratatouille
-  VERSION = "0.9.2"
+  # Gem Version
+  VERSION = "0.1.0"
 end

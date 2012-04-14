@@ -1,8 +1,12 @@
 require 'spec_helper'
 
-class RatifierTest < Ratatouille::Ratifier; end
-
 describe Ratatouille::Ratifier do
+
+  it "should be valid on instantiation of new object" do
+    e = RatifierTest.new({})
+    e.should be_valid
+  end
+
   it "errors should contain one key within block of new instance" do
     x = {}
     e = RatifierTest.new({}){ x = @errors }
