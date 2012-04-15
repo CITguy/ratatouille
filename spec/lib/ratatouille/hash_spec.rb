@@ -63,6 +63,24 @@ describe "Ratatouille::HashMethods" do
     end
   end
 
+  describe "required_key" do
+    it "should be invalid when given a key for an empty hash" do
+      RatifierTest.new({}){ required_key(:foo) }.should_not be_valid
+    end
+
+    it "should be invalid when given a key that doesn't exist in the hash" do
+      RatifierTest.new({:foo => "foo"}){ required_key(:bar) }.should_not be_valid
+    end
+
+    it "should not progress into block if invalid" do
+      f = false
+      RatifierTest.new({}) do
+        required_key(:foo) { f = true }
+      end
+      f.should be_false
+    end
+  end
+
   describe "given_key" do
     it "should change the scope name to default to the key if no name passed as option" do
       n = ""

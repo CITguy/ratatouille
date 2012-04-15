@@ -158,6 +158,28 @@ Used to ensure that the list of keys exist in the Hash.
 
 
 
+### required\_key
+
+Used to ensure given key exists in the Hash.
+
+* Eliminates the need to perform "given\_key" methods within a "required\_keys" block.
+* Block is optional
+
+
+#### Syntax
+
+```ruby
+    # Validate that the keys exist and perform validation if they do
+    required_key(:foo) do
+      # Validation provided that :foo exists in Hash
+    end
+
+    # Validate that the keys exist
+    required_key(:foo)
+```
+
+
+
 ### is\_empty
 
 * Self-explanatory

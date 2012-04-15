@@ -80,6 +80,33 @@ module Ratatouille
     end#required_keys
 
 
+    # Perform validation on a key that must be present in the Hash to validate. Otherwise,
+    # an error will be added.
+    #
+    # @param [String,Symbol] req_key Required Key
+    # @return [void]
+    def required_key(req_key, &block)
+      if req_key.nil?
+        validation_error("required_key needs key argument")
+        return
+      end
+
+      unless @ratifiable_object.has_key?(req_key)
+        case req_key
+        when Symbol then validation_error("Missing key :#{req_key}")
+        when String then validation_error("Missing key #{req_key}")
+        when respond_to?(:to_s)
+          validation_error("Missing key #{req_key.to_s}")
+        end
+        return
+      end
+
+      instance_eval(&block) if block_given?
+    rescue Exception => e
+      validation_error("#{e.message}")
+    end
+
+
     # Provide a list of keys to choose from and a choice size (default 1). 
     # When the Hash does not contain at least 'choice_size' keys of the key 
     # list provided, an error will be added.
