@@ -163,7 +163,7 @@ Used to ensure that the list of keys exist in the Hash.
 Used to ensure given key exists in the Hash.
 
 * Eliminates the need to perform "given\_key" methods within a "required\_keys" block.
-* Block is optional
+* Evaluates an optional block in context of key value (same as given\_key)
 
 
 #### Syntax

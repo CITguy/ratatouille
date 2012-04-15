@@ -85,7 +85,7 @@ module Ratatouille
     #
     # @param [String,Symbol] req_key Required Key
     # @return [void]
-    def required_key(req_key, &block)
+    def required_key(req_key, options={}, &block)
       if req_key.nil?
         validation_error("required_key needs key argument")
         return
@@ -101,7 +101,7 @@ module Ratatouille
         return
       end
 
-      instance_eval(&block) if block_given?
+      given_key(req_key, options, &block) if block_given?
     rescue Exception => e
       validation_error("#{e.message}")
     end
