@@ -116,6 +116,26 @@ module Ratatouille
 
       return all_errs
     end#errors_array
+
+
+    # Validate against ratifiable_object class
+    #
+    # @param [Class] klass
+    def is_a?(klass=nil, &block)
+      if klass.nil?
+        validation_error("must provide a Class for is_a?")
+        return
+      end
+
+      unless klass === @ratifiable_object
+        validation_error("object not of type #{klass}")
+        return
+      end
+
+      instance_eval(&block) if block_given?
+    rescue Exception => e
+      validation_error("#{e.message}", "/")
+    end#is_a?
   end#Ratifier
 
 end

@@ -44,6 +44,11 @@ Within a block, the name method provides the name of the scope. This can be used
 All of the following methods perform validation on the *ratifiable\_object* defined in scope of the block.
 
 
+### is\_a?
+
+Method to check if ratifiable\_object matches given class.
+
+
 ### given\_key
 
 This method is used to scope its given block to the key value. Useful to reduce the need to explicitly namespace nested keys in *ratifiable\_object*.

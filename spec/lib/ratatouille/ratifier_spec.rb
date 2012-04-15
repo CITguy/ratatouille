@@ -1,5 +1,7 @@
 require 'spec_helper'
 
+class Something; end
+
 describe Ratatouille::Ratifier do
 
   it "should be valid on instantiation of new object" do
@@ -148,6 +150,32 @@ describe Ratatouille::Ratifier do
       r.name = Object.new
       r.name = nil
       r.name.should == 'Hash'
+    end
+  end
+
+  describe "is_a?" do
+    it "should be invalid if no class given" do
+      RatifierTest.new({}) { is_a? }.should_not be_valid
+    end
+
+    it "should not progress into block if invalid" do
+      f = false
+      RatifierTest.new({}) do
+        is_a? { f = true }
+      end
+      f.should be_false
+    end
+
+    [
+      [['foo'], Array],
+      [{:foo => "foo"}, Hash],
+      [Object.new, Object],
+      [nil, NilClass]
+    ].each do |obj, klass|
+      it "#{obj.inspect} should be valid if matches #{klass}" do
+        RatifierTest.new(obj) { is_a?(klass) }.should be_valid
+        RatifierTest.new(obj) { is_a?(Something) }.should_not be_valid
+      end
     end
   end
 end
