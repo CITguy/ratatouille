@@ -46,7 +46,7 @@ All of the following methods perform validation on the *ratifiable\_object* defi
 
 ### is\_a?
 
-Method to check if ratifiable\_object matches given class.
+Method to check if ratifiable\_object matches given class. Will not validate without a given class.
 
 
 ### given\_key
