@@ -9,6 +9,13 @@ module Ratatouille
     def given_key(key, options={}, &block)
       options[:name] = options.fetch(:name, (Symbol === key ? ":#{key}" : key.to_s) )
 
+      if options.fetch(:required, false) == true
+        unless @ratifiable_object.has_key?(key)
+          validation_error("Missing key #{key.inspect}")
+          return
+        end
+      end
+
       if @ratifiable_object.has_key?(key) && block_given?
         child_object = Ratatouille::Ratifier.new(@ratifiable_object[key], options, &block)
         @errors[key] = child_object.errors unless child_object.valid?
@@ -64,12 +71,7 @@ module Ratatouille
 
       unless common_keys.size == req_keys.size
         (req_keys - common_keys).each do |missed| 
-          case missed
-          when Symbol then validation_error("Missing :#{missed}")
-          when String then validation_error("Missing #{missed}")
-          when respond_to?(:to_s)
-            validation_error("Missing #{missed.to_s}")
-          end
+          validation_error("Missing #{missed.inspect}")
         end
         return
       end
@@ -83,25 +85,12 @@ module Ratatouille
     # Perform validation on a key that must be present in the Hash to validate. Otherwise,
     # an error will be added.
     #
-    # @param [String,Symbol] req_key Required Key
+    # @param key Required Key
     # @return [void]
-    def required_key(req_key, options={}, &block)
-      if req_key.nil?
-        validation_error("required_key needs key argument")
-        return
-      end
-
-      unless @ratifiable_object.has_key?(req_key)
-        case req_key
-        when Symbol then validation_error("Missing key :#{req_key}")
-        when String then validation_error("Missing key #{req_key}")
-        when respond_to?(:to_s)
-          validation_error("Missing key #{req_key.to_s}")
-        end
-        return
-      end
-
-      given_key(req_key, options, &block) if block_given?
+    def required_key(key, options={}, &block)
+      options[:required] = true
+      # Pass on processing to given_key with :required => true option
+      given_key(key, options, &block)
     rescue Exception => e
       validation_error("#{e.message}")
     end
