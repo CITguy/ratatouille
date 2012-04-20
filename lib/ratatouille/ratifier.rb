@@ -25,6 +25,9 @@ module Ratatouille
       @errors.freeze
     end#initialize
 
+    # Alias method (much shorter to type)
+    alias :ro :ratifiable_object
+
 
     # Name of instance
     #
@@ -118,7 +121,8 @@ module Ratatouille
     end#errors_array
 
 
-    # Validate against ratifiable_object class
+    # Method to check if ratifiable_object matches given class.
+    # Will not validate without class.
     #
     # @param [Class] klass
     def is_a?(klass=nil, &block)
