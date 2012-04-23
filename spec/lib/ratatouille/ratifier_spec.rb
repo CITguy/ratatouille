@@ -17,6 +17,20 @@ describe Ratatouille::Ratifier do
     x['/'].should be_empty
   end
 
+  describe "when attempting to call an undefined method" do
+    it "should be invalid to call required_keys on an Array" do
+      RatifierTest.new([]){ 
+        required_keys(:key_list => [:foo]) 
+      }.should_not be_valid
+    end
+
+    it "should be invalid to call required_keys on an Object" do
+      RatifierTest.new(Object.new){ 
+        required_keys(:key_list => [:foo]) 
+      }.should_not be_valid
+    end
+  end
+
   describe "validation_error" do
     it "should create an error when called within a Ratifier block" do
       test = RatifierTest.new(Object.new) do
@@ -175,6 +189,24 @@ describe Ratatouille::Ratifier do
       it "#{obj.inspect} should be valid if matches #{klass}" do
         RatifierTest.new(obj) { is_a?(klass) }.should be_valid
         RatifierTest.new(obj) { is_a?(Something) }.should_not be_valid
+      end
+    end
+  end
+
+  describe "method_missing" do
+    describe "for non-standard boolean methods" do
+      it "should render object invalid for given method" do
+        obj = Object.new
+        obj.stub(:foo?).and_return(false)
+        RatifierTest.new(obj) { is_foo }.should_not be_valid
+        RatifierTest.new(obj) { is_not_foo }.should be_valid
+      end
+
+      it "should render object valid for given method" do
+        obj = Object.new
+        obj.stub(:bar?).and_return(true)
+        RatifierTest.new(obj) { is_bar }.should be_valid
+        RatifierTest.new(obj) { is_not_bar }.should_not be_valid
       end
     end
   end

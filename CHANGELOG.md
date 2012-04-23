@@ -1,3 +1,13 @@
+## 1.3.2
+
+### Updates
+
+* is\_empty and is\_not\_empty have been moved to generic ghost methods in the Ratifier object that also support other boolean methods.
+  * Say you have Object#foo?, you can use **is\_foo** and **is\_not\_foo** for validation against that boolean method
+* **:is\_a** added as option to perform class validation prior to the core method logic for the following methods:
+  * HashMethod#given_key
+  * HashMethod#required_key
+
 ## 1.3.0 (API Change!)
 
 ### Updates

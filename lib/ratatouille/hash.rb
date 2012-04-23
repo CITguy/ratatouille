@@ -16,19 +16,22 @@ module Ratatouille
     #
     # @param [String, Symbol] key
     # @param [Hash] options
+    # @option options [Class] :is_a (nil) 
+    #   Used to ensure that the value of the required key is of the given class.
+    #   * Performed before all other validation (if defined).
+    #   * Validation will be skipped if option not defined.
     # @option options [String, Symbol] :name (key.to_s)
     #   Name of ratifiable_object for use with validation error messages.
     # @option options [Boolean] :required (false) 
     #   Ensure that ratifiable_object has the given key
-    # @option options [Boolean] :unwrap_block (false)
-    #   Perform block validation only -- skip is_empty validation logic.
-    #   Useless unless block provided
     def given_key(key, options={}, &block)
       options[:name] = options.fetch(:name, (Symbol === key ? ":#{key}" : key.to_s) )
 
-      unless options.fetch(:unwrap_block, false) == true
-        # Wrapped Validation
-        if options.fetch(:required, false) == true
+      parse_options(options)
+
+      unless @unwrap_block == true
+        # WRAPPED VALIDATION
+        if @required == true
           unless @ratifiable_object.has_key?(key)
             validation_error("Missing key #{key.inspect}")
             return
@@ -36,57 +39,48 @@ module Ratatouille
         end
       end
 
-      if @ratifiable_object.has_key?(key) && block_given?
-        child_object = Ratatouille::Ratifier.new(@ratifiable_object[key], options, &block)
-        @errors[key] = child_object.errors unless child_object.valid?
+      if @ratifiable_object.has_key?(key)
+        unless @unwrap_block == true
+          # WRAPPED VALIDATION
+          unless @is_a.nil?
+            unless @is_a === @ratifiable_object[key]
+              validation_error("key value is not of type #{@is_a}")
+              return
+            end
+          end
+        end
+
+        if block_given?
+          child_object = Ratatouille::Ratifier.new(@ratifiable_object[key], options, &block)
+          @errors[key] = child_object.errors unless child_object.valid?
+        end
       end
     rescue Exception => e
       validation_error("#{e.message}")
     end#given_key
 
 
-    # Self-explanatory
+    # Perform validation on a single key that must be present in the Hash to validate. 
+    # Otherwise, an error will be added.
     #
+    # * Eliminates the need to perform given_key methods within a required_keys block.
+    # * Evaluates an optional block in context of key value (same as given_key)
+    #
+    # @param key Required Key
     # @param [Hash] options
-    # @option options [Boolean] :unwrap_block (false) 
-    #   Perform block validation only -- skip is_empty validation logic.
-    #   Useless unless block provided
+    # @option options [Class] :is_a (nil) 
+    #   Used to ensure that the value of the required key is of the given class.
+    #   * Performed before all other validation (if defined).
+    #   * Validation will be skipped if option not defined.
+    # @option options [Boolean] :required (true) Used to call given_key.
     # @return [void]
-    def is_empty(options={}, &block)
-      unless options.fetch(:unwrap_block, false) == true
-        # Wrapped Validation
-        unless @ratifiable_object.empty?
-          validation_error("not empty")  
-          return
-        end
-      end
-
-      instance_eval(&block) if block_given?
+    def required_key(key, options={}, &block)
+      options[:required] = true
+      # Pass on processing to given_key with :required => true option
+      given_key(key, options, &block)
     rescue Exception => e
       validation_error("#{e.message}")
-    end#is_empty
-
-
-    # Self-explanatory
-    #
-    # @param [Hash] options
-    # @option options [Boolean] :unwrap_block (false) 
-    #   Perform block validation only -- skip is_not_empty validation logic.
-    #   Useless unless block provided
-    # @return [void]
-    def is_not_empty(options={}, &block)
-      unless options.fetch(:unwrap_block, false) == true
-        # Wrapped Validation
-        if @ratifiable_object.empty?
-          validation_error("empty")
-          return
-        end
-      end
-
-      instance_eval(&block) if block_given?
-    rescue Exception => e
-      validation_error("#{e.message}")
-    end#is_not_empty
+    end
 
 
     # Provide a list of keys that must be present in the Hash to validate. 
@@ -110,7 +104,9 @@ module Ratatouille
     #   Useless unless block provided
     # @return [void]
     def required_keys(options={}, &block)
-      unless options.fetch(:unwrap_block, false) == true
+      parse_options(options)
+
+      unless @unwrap_block == true
         req_keys = options.fetch(:key_list, [])
 
         # Wrapped Validation
@@ -140,25 +136,6 @@ module Ratatouille
     end#required_keys
 
 
-    # Perform validation on a single key that must be present in the Hash to validate. 
-    # Otherwise, an error will be added.
-    #
-    # * Eliminates the need to perform given_key methods within a required_keys block.
-    # * Evaluates an optional block in context of key value (same as given_key)
-    #
-    # @param key Required Key
-    # @param [Hash] options
-    # @option options [Boolean] :required (true) Used to call given_key.
-    # @return [void]
-    def required_key(key, options={}, &block)
-      options[:required] = true
-      # Pass on processing to given_key with :required => true option
-      given_key(key, options, &block)
-    rescue Exception => e
-      validation_error("#{e.message}")
-    end
-
-
     # Provide a list of keys to choose from and a choice size. 
     # When the Hash does not contain at least 'choice_size' keys of the key 
     # list provided, an error will be added.
@@ -184,10 +161,10 @@ module Ratatouille
     #   Perform block validation only -- skip choice_of validation logic.
     #   Useless unless block provided
     # @return [void]
-    def choice_of(options, &block)
-      options ||= {}
+    def choice_of(options={}, &block)
+      parse_options(options)
 
-      unless options.fetch(:unwrap_block, false) == true
+      unless @unwrap_block == true
         choice_size = options.fetch(:choice_size, 1)
         key_list = options.fetch(:key_list, [])
 

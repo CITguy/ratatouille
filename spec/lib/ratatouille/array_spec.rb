@@ -1,9 +1,7 @@
 require 'spec_helper'
 
 describe "Ratatouille::ArrayMethods" do
-  [ :is_empty, 
-    :is_not_empty, 
-    :min_length, 
+  [ :min_length, 
     :max_length, 
     :length_between
   ].each do |m|

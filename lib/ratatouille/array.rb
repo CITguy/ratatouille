@@ -2,47 +2,6 @@ module Ratatouille
 
   # Module used to provide Array-specific validation methods
   module ArrayMethods
-
-    # @param [Hash] options
-    # @option options [Boolean] :unwrap_block (false)
-    #   Perform block validation only -- skip is_empty validation logic.
-    #   Useless unless block provided
-    # @return [void]
-    def is_empty(options={}, &block)
-      unless options.fetch(:unwrap_block, false) == true
-        # Wrapped Validation
-        unless @ratifiable_object.empty?
-          validation_error("not empty")  
-          return
-        end
-      end
-
-      instance_eval(&block) if block_given?
-    rescue Exception => e
-      validation_error("#{e.message}")
-    end#is_empty
-
-
-    # @param [Hash] options
-    # @option options [Boolean] :unwrap_block (false)
-    #   Perform block validation only -- skip is_not_empty validation logic.
-    #   Useless unless block provided
-    # @return [void]
-    def is_not_empty(options={}, &block)
-      unless options.fetch(:unwrap_block, false) == true
-        # Wrapped Validation
-        if @ratifiable_object.empty?
-          validation_error("empty")
-          return
-        end
-      end
-
-      instance_eval(&block) if block_given?
-    rescue Exception => e
-      validation_error("#{e.message}")
-    end#is_not_empty
-
-
     # Define Minimum Length of Array
     # 
     # @param [Integer] min_size
@@ -52,7 +11,9 @@ module Ratatouille
     #   Useless unless block provided
     # @return [void]
     def min_length(min_size=0, options={}, &block)
-      unless options.fetch(:unwrap_block, false) == true
+      parse_options(options)
+
+      unless @unwrap_block == true
         # Wrapped Validation
         return unless valid_min_length?(min_size)
       end
@@ -72,7 +33,9 @@ module Ratatouille
     #   Useless unless block provided
     # @return [void]
     def max_length(max_size=0, options={}, &block)
-      unless options.fetch(:unwrap_block, false) == true
+      parse_options(options)
+
+      unless @unwrap_block == true
         # Wrapped Validation
         return unless valid_max_length?(max_size)
       end
@@ -93,7 +56,9 @@ module Ratatouille
     #   Useless unless block provided
     # @return [void]
     def length_between(min_size=0, max_size=nil, options={}, &block)
-      unless options.fetch(:unwrap_block, false) == true
+      parse_options(options)
+
+      unless @unwrap_block == true
         # Wrapped Validation
         return unless valid_min_length?(min_size)
 

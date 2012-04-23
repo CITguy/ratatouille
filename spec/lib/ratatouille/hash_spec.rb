@@ -1,42 +1,56 @@
 require 'spec_helper'
 
 describe "Ratatouille::HashMethods" do
-  describe "is_empty" do
-    it "should be invalid for non-empty Hash" do
-      RatifierTest.new({:bar => 'biz'}){ is_empty }.should_not be_valid
-    end
-
-    it "should be valid for empty Hash" do
-      RatifierTest.new({}){ is_empty }.should be_valid
-    end
-
-    describe "when :unwrap_block is true" do
-      it "should be valid for non-empty Hash" do
-        RatifierTest.new({:bar => 'biz'}){ 
-          is_empty(:unwrap_block => true) do
-            # Nothing to validate, wrapper ignored.
-          end
-        }.should be_valid
-      end
+  [ :choice_of,
+    :required_keys,
+    :required_key,
+    :given_key
+  ].each do |m|
+    it "block context should respond to #{m}" do
+      r = nil
+      RatifierTest.new({}) { r = self }
+      r.should respond_to m
     end
   end
 
-  describe "is_not_empty" do
-    it "should be valid for non-empty hash" do
-      RatifierTest.new({:bar => "biz"}){ is_not_empty }.should be_valid
+  describe "(backward compatibility)" do
+    describe "is_empty" do
+      it "should be invalid for non-empty Hash" do
+        RatifierTest.new({:bar => 'biz'}){ is_empty }.should_not be_valid
+      end
+
+      it "should be valid for empty Hash" do
+        RatifierTest.new({}){ is_empty }.should be_valid
+      end
+
+      describe "when :unwrap_block is true" do
+        it "should be valid for non-empty Hash" do
+          RatifierTest.new({:bar => 'biz'}){ 
+            is_empty(:unwrap_block => true) do
+              # Nothing to validate, wrapper ignored.
+            end
+          }.should be_valid
+        end
+      end
     end
 
-    it "should not be valid for empty hash" do
-      RatifierTest.new({}){ is_not_empty }.should_not be_valid
-    end
+    describe "is_not_empty" do
+      it "should be valid for non-empty hash" do
+        RatifierTest.new({:bar => "biz"}){ is_not_empty }.should be_valid
+      end
 
-    describe "when :unwrap_block is true" do
-      it "should be valid for empty hash" do
-        RatifierTest.new({}){ 
-          is_not_empty(:unwrap_block => true) do
-            # Nothing to validate, wrapper ignored
-          end
-        }.should be_valid
+      it "should not be valid for empty hash" do
+        RatifierTest.new({}){ is_not_empty }.should_not be_valid
+      end
+
+      describe "when :unwrap_block is true" do
+        it "should be valid for empty hash" do
+          RatifierTest.new({}){ 
+            is_not_empty(:unwrap_block => true) do
+              # Nothing to validate, wrapper ignored
+            end
+          }.should be_valid
+        end
       end
     end
   end
@@ -171,6 +185,24 @@ describe "Ratatouille::HashMethods" do
             # Nothing to validate, wrapper ignored
           end
         }.should be_valid
+      end
+    end
+
+    describe "when :is_a is given" do
+      it "should be valid with matching key value class" do
+        RatifierTest.new({:foo => "bar"}){
+          required_key(:foo, :class => String) do
+            # Nothing to validate, wrapper ignored
+          end
+        }.should be_valid
+      end
+
+      it "should be invalid with non-matching key value class" do
+        RatifierTest.new({:foo => "bar"}){
+          required_key(:foo, :is_a => Hash) do
+            # Nothing to validate, wrapper ignored
+          end
+        }.should_not be_valid
       end
     end
   end
