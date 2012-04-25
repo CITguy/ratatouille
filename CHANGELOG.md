@@ -4,6 +4,10 @@
 
 * :is\_a now available as an option in **ratify** to reduce unnecessary nesting
 
+### Corrections
+
+* Fixed logic error while processing missing methods. It will correctly call super on missing\_method if 
+  we do not catch expected methods
 
 ## 1.3.2
 
