@@ -13,12 +13,18 @@ module Ratatouille
       @ratifiable_object = obj
       self.name = options[:name]
 
+      @is_a ||= options[:is_a]
+
       case obj
       when Hash  then extend Ratatouille::HashMethods
       when Array then extend Ratatouille::ArrayMethods
       end
 
-      instance_eval( &block ) if block_given?
+      unless @is_a.nil?
+        is_a?(@is_a, &block)
+      else
+        instance_eval( &block ) if block_given?
+      end
 
       cleanup_errors
 
@@ -174,16 +180,24 @@ module Ratatouille
         if @ratifiable_object.respond_to?("#{$1}?")
           if @ratifiable_object.send("#{$1}?") == true
             validation_error("is #{$1}")
+            return
           end
         end
       when id.to_s =~ /^is_(.*)$/
         if @ratifiable_object.respond_to?("#{$1}?")
           if @ratifiable_object.send("#{$1}?") == false
             validation_error("is not #{$1}")
+            return
           end
         end
       else
-        validation_error("#{id} is not supported for the given object (#{@ratifiable_object.class})")
+        begin
+          super
+          return
+        rescue Exception => e
+          validation_error("#{id} is not supported for the given object (#{@ratifiable_object.class})")
+          return e
+        end
       end
 
       instance_eval(&block) if block_given?

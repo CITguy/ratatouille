@@ -1,3 +1,10 @@
+## 1.3.4
+
+### Updates
+
+* :is\_a now available as an option in **ratify** to reduce unnecessary nesting
+
+
 ## 1.3.2
 
 ### Updates

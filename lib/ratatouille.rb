@@ -11,6 +11,8 @@ module Ratatouille
 
   # @param [Hash, Array] obj Object to validate
   # @param [Hash] options
+  # @option options [Class] :is_a
+  # @option options [String, Symbol] :name
   # @return [Validatable::Ratifier]
   def ratify(obj, options={}, &block)
     Ratatouille::Ratifier.new(obj, options, &block)

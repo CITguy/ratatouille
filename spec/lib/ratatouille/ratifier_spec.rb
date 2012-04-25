@@ -9,6 +9,20 @@ describe Ratatouille::Ratifier do
     e.should be_valid
   end
 
+  it "should not progress into block if :is_a validation fails" do
+    f = false
+    RatifierTest.new({}, :is_a => String) { f = true }
+    f.should be_false
+
+    g = false
+    RatifierTest.new({}, :is_a => Hash) { g = true }
+    g.should be_true
+
+    h = false
+    RatifierTest.new({}) { h = true }
+    h.should be_true
+  end
+
   it "errors should contain one key within block of new instance" do
     x = {}
     e = RatifierTest.new({}){ x = @errors }
