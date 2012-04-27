@@ -2,6 +2,28 @@ module Ratatouille
 
   # Module used to provide Array-specific validation methods
   module ArrayMethods
+    
+    # Iterator method to encapsulate validation
+    #
+    # @note Method will NOT work without a block
+    # @param [Hash] options
+    # @option options [Hash] :each 
+    #   options to pass to ratifier for each item in array
+    # @option options [Integer] :min_length
+    # @option options [Integer] :max_length
+    # @return [void]
+    def ratify_each(options={}, &block)
+      if block_given?
+        item_name = options[:name] || "array_item"
+        @ratifiable_object.each_with_index do |obj, i|
+          options[:name] = "#{item_name}"
+          child_object = Ratatouille::Ratifier.new(obj, options, &block)
+          @errors["/"] << child_object.errors unless child_object.valid?
+        end
+      end
+    end#ratify_each
+
+
     # Define Minimum Length of Array
     # 
     # @param [Integer] min_size
