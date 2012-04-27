@@ -1,3 +1,11 @@
+## 1.3.6
+
+### Updates
+
+* New Array Method: **ratify\_each** iterates over each item in an array to perform validation logic.
+* Tweaks to Ratatouille::Ratifier.errors\_array to provide additional functionality required for **ratify\_each**.
+  * Refactored logic in Ratatouille::Ratifier into new method (**namespace\_errors\_array**).
+
 ## 1.3.4
 
 ### Updates

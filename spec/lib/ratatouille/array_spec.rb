@@ -1,7 +1,8 @@
 require 'spec_helper'
 
 describe "Ratatouille::ArrayMethods" do
-  [ :min_length, 
+  [ :ratify_each, 
+    :min_length, 
     :max_length, 
     :length_between
   ].each do |m|
@@ -9,6 +10,39 @@ describe "Ratatouille::ArrayMethods" do
       r = nil
       RatifierTest.new([]) { r = self }
       r.should respond_to m
+    end
+  end
+
+  describe "ratify_each" do
+    it "should set block name to name in options" do
+      n = ""
+      RatifierTest.new(['foo', 'bar']) do
+        ratify_each { n = name }
+      end
+      n.should match /^(array_item)/i
+
+      RatifierTest.new(['foo', 'bar']) do
+        ratify_each(:name => "foo") { n = name }
+      end
+      n.should match /^foo/i
+    end
+
+    it "should be invalid for given array" do
+      r = RatifierTest.new(['bar', 'biz']) do
+        ratify_each(:is_a => String) do
+          validation_error("#{ro} is not 'bang'") unless ro == 'bang'
+        end
+      end
+      r.errors_array.length.should == 2
+    end
+
+    it "should be valid for given array" do
+      r = RatifierTest.new(['bar', 'biz']) do
+        ratify_each(:is_a => String) do
+          validation_error("too short") unless ro.size > 2
+        end
+      end
+      r.should be_valid
     end
   end
 

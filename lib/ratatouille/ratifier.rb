@@ -92,38 +92,35 @@ module Ratatouille
 
     # @param [Hash] hsh Hash to act upon.
     # @return [Array]
-    def errors_array(hsh = @errors)
-      return [] unless Hash === hsh
+    def errors_array(item = @errors)
       all_errs = []
 
-      hsh.each_pair do |k,v|
-        pair_errs = case v
-        when Hash then errors_array(v)
-        when Array then v
-        else []
-        end
-
-        nsed_errs = pair_errs.collect do |e|
-          split_err = e.split("|")
-
-          ctxt, err = "", e
-          ctxt, err = split_err if split_err.size == 2
-
-          case k
-          when String  
-            ctxt = "#{k}#{ctxt}" unless k == '/'
-          when Symbol 
-            ctxt = ":#{k}#{ctxt}"
+      case item
+      when Array
+        item.each_with_index do |e,i|
+          item_errs = case e
+          when Hash, Array then errors_array(e)
+          when String then e
+          else []
           end
 
-          "/#{ctxt}|#{err}"
+          all_errs << namespace_error_array(item_errs, "[#{i}]")
+          all_errs.flatten!
         end
+      when Hash
+        item.each_pair do |k,v|
+          pair_errs = case v
+          when Hash, Array then errors_array(v)
+          when String then v
+          else []
+          end
 
-        all_errs << nsed_errs
-        all_errs.flatten!
+          all_errs << namespace_error_array(pair_errs, k)
+          all_errs.flatten!
+        end
       end
 
-      return all_errs
+      return Array(all_errs)
     end#errors_array
 
 
@@ -131,6 +128,7 @@ module Ratatouille
     # Will not validate without class.
     #
     # @param [Class] klass
+    # @return [void]
     def is_a?(klass=nil, &block)
       if klass.nil?
         validation_error("must provide a Class for is_a?")
@@ -152,12 +150,14 @@ module Ratatouille
     # validation methods defined in various places.
     #
     # @param [Hash] options
+    # @option options [Class] :is_a (nil)
+    # @option options [Boolean] :required (false)
     # @option options [Boolean] :unwrap_block (false)
     #   Perform block validation only -- skip method validation logic.
     def parse_options(options={})
-      @unwrap_block = options.fetch(:unwrap_block, false)
       @is_a = options.fetch(:is_a, nil)
       @required = options.fetch(:required, false)
+      @unwrap_block = options.fetch(:unwrap_block, false)
     end#parse_options
 
 
@@ -203,6 +203,36 @@ module Ratatouille
       instance_eval(&block) if block_given?
       return
     end#method_missing
+
+
+    # Properly prepend namespace definition to array of errors
+    #
+    # @param [Array] arr
+    # @param [String,Symbol] namespace
+    # @return [Array]
+    def namespace_error_array(arr=[], namespace="")
+      errs_out = arr.collect do |e|
+        split_err = e.split("|")
+
+        ctxt, err = "", e
+        ctxt, err = split_err if split_err.size == 2
+
+        case namespace
+        when String  
+          ctxt = "#{namespace}#{ctxt}" unless namespace =~ /^\/.?/
+        when Symbol 
+          ctxt = ":#{namespace}#{ctxt}"
+        end
+
+        if ctxt =~ /^\/.?/
+          "#{ctxt}|#{err}" 
+        else
+          "/#{ctxt}|#{err}"
+        end
+      end
+
+      return Array(errs_out)
+    end#namespace_error_array
   end#Ratifier
 
 end
