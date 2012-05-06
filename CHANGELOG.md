@@ -1,3 +1,10 @@
+## 1.3.8
+
+### Updates
+
+* New is\_boolean method to test if ratifiable\_object value is of a TrueClass or FalseClass. 
+* All other classes fail validation.
+
 ## 1.3.6
 
 ### Updates

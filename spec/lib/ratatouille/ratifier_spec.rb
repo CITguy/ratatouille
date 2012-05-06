@@ -3,32 +3,58 @@ require 'spec_helper'
 class Something; end
 
 describe Ratatouille::Ratifier do
+  let(:valid_ratifier)   { RatifierTest.new({}) }
+  let(:invalid_ratifier) { RatifierTest.new({}) { is_not_empty } }
 
-  it "should be valid on instantiation of new object" do
-    e = RatifierTest.new({})
-    e.should be_valid
-  end
+  context ".new"  do
+    it "should be valid" do
+      valid_ratifier.should be_valid
+    end
 
-  it "should not progress into block if :is_a validation fails" do
-    f = false
-    RatifierTest.new({}, :is_a => String) { f = true }
-    f.should be_false
+    context "errors_array" do
+      it "should be empty on new object" do
+        valid_ratifier.errors_array.should be_empty
+      end
+    end
 
-    g = false
-    RatifierTest.new({}, :is_a => Hash) { g = true }
-    g.should be_true
+    context "errors within validation block" do
+      before(:each) do
+        x = {}
+        RatifierTest.new({}){ x = @errors }
+        @errs = x
+      end
 
-    h = false
-    RatifierTest.new({}) { h = true }
-    h.should be_true
-  end
+      it "errors should contain one key" do
+        @errs.keys.size.should == 1
+        @errs.keys.should == ['/']
+      end
 
-  it "errors should contain one key within block of new instance" do
-    x = {}
-    e = RatifierTest.new({}){ x = @errors }
-    x.keys.size.should == 1
-    x.keys.should == ['/']
-    x['/'].should be_empty
+      it "errors['/'] should be empty" do
+        @errs['/'].should be_empty
+      end
+    end
+
+    context "with :is_a" do
+      it "shouldn't enter validation block for Hash if expecting a String" do
+        block_entered = false
+        RatifierTest.new({}, :is_a => String) { block_entered = true }
+        block_entered.should be_false
+      end
+
+      it "should enter validation block for Hash if expecting a Hash" do
+        block_entered = false
+        RatifierTest.new({}, :is_a => Hash) { block_entered = true }
+        block_entered.should be_true
+      end
+    end
+    
+    context "without :is_a" do
+      it "should enter validation block" do
+        block_entered = false
+        RatifierTest.new({}) { block_entered = true }
+        block_entered.should be_true
+      end
+    end
   end
 
   describe "when attempting to call an undefined method" do
@@ -68,11 +94,6 @@ describe Ratatouille::Ratifier do
 
     it "should add the error to the '/' context by default" do
       test = RatifierTest.new({}) do
-        # NO ERRORS
-      end
-      test.errors['/'].should be_empty
-
-      test = RatifierTest.new({}) do
         validation_error("foo")
       end
       test.errors['/'].should have(1).String
@@ -80,9 +101,7 @@ describe Ratatouille::Ratifier do
 
     it "should add an error to an explicit context (even if it doesn't exist)" do
       ctxt = "foo"
-      test = RatifierTest.new({}) do
-        # NO ERRORS
-      end
+      test = valid_ratifier
       test.errors[ctxt].should be_nil
 
       test = RatifierTest.new({}) do
@@ -93,72 +112,56 @@ describe Ratatouille::Ratifier do
   end
 
   describe "valid?" do
-    it "should be true if errors is empty?" do
-      test = RatifierTest.new({}) do
-        # No Validation = Valid Object
-      end
-      test.valid?.should be_true
-    end
   end
 
   describe "instance variables" do
-    before(:each) do
-      @test = RatifierTest.new({})
-    end
-
     describe "ratifiable_object" do
       it "should raise error if modification is attempted" do
-        Proc.new { @test.ratifiable_object = {} }.should raise_error NoMethodError
+        Proc.new { valid_ratifier.ratifiable_object = {} }.should raise_error NoMethodError
       end
     end
 
     describe "errors" do
       it "should raise error if modification is attempted" do
-        Proc.new { @test.errors = {} }.should         raise_error NoMethodError
-        Proc.new { @test.errors.delete("/") }.should  raise_error TypeError
+        Proc.new { valid_ratifier.errors = {} }.should         raise_error NoMethodError
+        Proc.new { valid_ratifier.errors.delete("/") }.should  raise_error TypeError
       end
 
       it "should be empty on valid object" do
-        ratifier = RatifierTest.new({:foo => "bar"}) do
-          # No Validations = Valid Object
-        end
-        ratifier.errors.should be_empty
+        valid_ratifier.errors.should be_empty
       end
 
       it "should not be empty on invalid object" do
-        ratifier = RatifierTest.new({:foo => "bar"}) { is_empty }
-        ratifier.errors.should_not be_empty
+        invalid_ratifier.errors.should_not be_empty
       end
     end
 
     describe "errors_array" do
-      it "should be empty on new Ratifier" do
-        @test.errors_array.should be_empty
-      end
-
-      it "should be empty on valid object" do
-        ratifier = RatifierTest.new({}) do
-          # No Validations = Valid Object
-        end
-        ratifier.errors_array.should be_empty
-      end
-
       it "should have at least one String item for an invalid object" do
-        test = RatifierTest.new({:foo => "bar"}){ is_empty }
-        test.errors_array.should_not  be_empty
-        test.errors_array.should      have_at_least(1).String
+        invalid_ratifier.errors_array.should have_at_least(1).String
+      end
+    end
+  end
+
+  describe "is_boolean" do
+    [true, false].each do |b|
+      it "should enter block for #{b} value" do
+        block_entered = false
+        RatifierTest.new(b) do
+          is_boolean { block_entered = true }
+        end
+        block_entered.should be_true
       end
     end
   end
 
   describe "name" do
-    it "should return the same value if called twice in a row" do
-      r = RatifierTest.new({})
-      r.name.should == r.name
+    it "should return same value if called twice in a row" do
+      valid_ratifier.name.should == valid_ratifier.name
     end
 
     it "should always return a String" do
-      RatifierTest.new({}).name.should be_a String
+      valid_ratifier.name.should be_a String
     end
 
     it "should return the class of the object if :name isn't passed into options" do
@@ -175,7 +178,9 @@ describe Ratatouille::Ratifier do
     it "should not change the name if passed a non-string name" do
       r = RatifierTest.new({})
       r.name = NilClass
+      r.name.should == 'Hash'
       r.name = Object.new
+      r.name.should == 'Hash'
       r.name = nil
       r.name.should == 'Hash'
     end
@@ -202,22 +207,25 @@ describe Ratatouille::Ratifier do
     ].each do |obj, klass|
       it "#{obj.inspect} should be valid if matches #{klass}" do
         RatifierTest.new(obj) { is_a?(klass) }.should be_valid
+      end
+
+      it "#{obj.inspect} should NOT be valid if expecting Something object" do
         RatifierTest.new(obj) { is_a?(Something) }.should_not be_valid
       end
     end
   end
 
   describe "method_missing" do
-    describe "for non-standard boolean methods" do
+    context "with non-standard boolean methods" do
+      let(:obj) { Object.new }
+
       it "should render object invalid for given method" do
-        obj = Object.new
         obj.stub(:foo?).and_return(false)
         RatifierTest.new(obj) { is_foo }.should_not be_valid
         RatifierTest.new(obj) { is_not_foo }.should be_valid
       end
 
       it "should render object valid for given method" do
-        obj = Object.new
         obj.stub(:bar?).and_return(true)
         RatifierTest.new(obj) { is_bar }.should be_valid
         RatifierTest.new(obj) { is_not_bar }.should_not be_valid

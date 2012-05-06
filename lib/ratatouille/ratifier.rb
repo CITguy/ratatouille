@@ -146,6 +146,23 @@ module Ratatouille
     end#is_a?
 
 
+    # Check if ratifiable object is a TrueClass or FalseClass.
+    # Any other class will result in a failed validation.
+    #
+    # @return [Boolean]
+    def is_boolean(&block)
+      case @ratifiable_object
+      when TrueClass, FalseClass 
+        instance_eval(&block) if block_given?
+      else 
+        validation_error("object is not a boolean")
+        return
+      end
+    rescue Exception => e
+      validation_error("#{e.message}", "/")
+    end#is_boolean?
+
+
     # Parse out common options into instance_variables for use within the
     # validation methods defined in various places.
     #
