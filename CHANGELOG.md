@@ -1,3 +1,17 @@
+## 1.4.0
+
+### Updates
+
+* New global :skip option allows you to programmatically skip validation by passing in a value of true.
+* min\_length and max\_length now call length\_between to perform validation
+* is\_boolean now accepts :unwrap\_block option in addition to new :skip option
+* 12 new tests
+
+### Corrections
+
+* Fixed some false negatives with Array length validation
+* :unwrap\_block not applicable for given\_key if :required is set to true
+
 ## 1.3.8
 
 ### Updates

@@ -13,7 +13,7 @@ module Ratatouille
       @ratifiable_object = obj
       self.name = options[:name]
 
-      @is_a ||= options[:is_a]
+      parse_options(options)
 
       case obj
       when Hash  then extend Ratatouille::HashMethods
@@ -57,7 +57,7 @@ module Ratatouille
 
 
     # Add validation error. Useful for custom validations.
-    # @param [String] str
+    # @param [String] err_in
     # @param [String] context
     # @return [void]
     def validation_error(err_in, context="/")
@@ -90,7 +90,7 @@ module Ratatouille
     end#cleanup_errors
 
 
-    # @param [Hash] hsh Hash to act upon.
+    # @param [Hash] item Hash to act upon.
     # @return [Array]
     def errors_array(item = @errors)
       all_errs = []
@@ -150,13 +150,21 @@ module Ratatouille
     # Any other class will result in a failed validation.
     #
     # @return [Boolean]
-    def is_boolean(&block)
-      case @ratifiable_object
-      when TrueClass, FalseClass 
+    def is_boolean(options={}, &block)
+      parse_options(options)
+
+      unless @skip == true
+        unless @unwrap_block == true
+          case @ratifiable_object
+          when TrueClass, FalseClass 
+            # OK to enter block
+          else 
+            validation_error("object is not a boolean")
+            return
+          end
+        end
+
         instance_eval(&block) if block_given?
-      else 
-        validation_error("object is not a boolean")
-        return
       end
     rescue Exception => e
       validation_error("#{e.message}", "/")
@@ -169,12 +177,16 @@ module Ratatouille
     # @param [Hash] options
     # @option options [Class] :is_a (nil)
     # @option options [Boolean] :required (false)
+    # @option options [Boolean] :skip (false)
     # @option options [Boolean] :unwrap_block (false)
     #   Perform block validation only -- skip method validation logic.
     def parse_options(options={})
-      @is_a = options.fetch(:is_a, nil)
-      @required = options.fetch(:required, false)
-      @unwrap_block = options.fetch(:unwrap_block, false)
+      if Hash === options
+        @is_a =         options.fetch(:is_a, nil)
+        @required =     options.fetch(:required, false)
+        @skip =         options.fetch(:skip, false)
+        @unwrap_block = options.fetch(:unwrap_block, false)
+      end
     end#parse_options
 
 
@@ -182,43 +194,39 @@ module Ratatouille
     # methods called on incorrect objects (hash validation on arrays, etc.)
     # as well as some catch-all methods for boolean validations (is_* and is_not_*)
     def method_missing(id, *args, &block)
-      should_unwrap = false
-      if args.first.respond_to?(:keys)
-        if args.first.fetch(:unwrap_block, false) == true
-          should_unwrap = true
-        end
-      end
+      parse_options(args.first)
 
-      case
-      when should_unwrap == true
-        # Perform no validation logic
-        # Skip to block evaluation
-      when id.to_s =~ /^is_not_(.*)$/
-        if @ratifiable_object.respond_to?("#{$1}?")
-          if @ratifiable_object.send("#{$1}?") == true
-            validation_error("is #{$1}")
+      unless @skip == true
+        case
+        when @unwrap_block == true
+          # Perform no validation logic
+          # Skip to block evaluation
+        when id.to_s =~ /^is_not_(.*)$/
+          if @ratifiable_object.respond_to?("#{$1}?")
+            if @ratifiable_object.send("#{$1}?") == true
+              validation_error("is #{$1}")
+              return
+            end
+          end
+        when id.to_s =~ /^is_(.*)$/
+          if @ratifiable_object.respond_to?("#{$1}?")
+            if @ratifiable_object.send("#{$1}?") == false
+              validation_error("is not #{$1}")
+              return
+            end
+          end
+        else
+          begin
+            super
             return
+          rescue Exception => e
+            validation_error("#{id} is not supported for the given object (#{@ratifiable_object.class})")
+            return e
           end
         end
-      when id.to_s =~ /^is_(.*)$/
-        if @ratifiable_object.respond_to?("#{$1}?")
-          if @ratifiable_object.send("#{$1}?") == false
-            validation_error("is not #{$1}")
-            return
-          end
-        end
-      else
-        begin
-          super
-          return
-        rescue Exception => e
-          validation_error("#{id} is not supported for the given object (#{@ratifiable_object.class})")
-          return e
-        end
-      end
 
-      instance_eval(&block) if block_given?
-      return
+        instance_eval(&block) if block_given?
+      end#skip
     end#method_missing
 
 

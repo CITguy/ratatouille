@@ -1,6 +1,8 @@
 require 'spec_helper'
 
 describe "Ratatouille::HashMethods" do
+  let(:empty_hash) { {} }
+
   [ :choice_of,
     :required_keys,
     :required_key,
@@ -20,7 +22,7 @@ describe "Ratatouille::HashMethods" do
       end
 
       it "should be valid for empty Hash" do
-        RatifierTest.new({}){ is_empty }.should be_valid
+        RatifierTest.new(empty_hash){ is_empty }.should be_valid
       end
 
       describe "when :unwrap_block is true" do
@@ -40,12 +42,12 @@ describe "Ratatouille::HashMethods" do
       end
 
       it "should not be valid for empty hash" do
-        RatifierTest.new({}){ is_not_empty }.should_not be_valid
+        RatifierTest.new(empty_hash){ is_not_empty }.should_not be_valid
       end
 
       describe "when :unwrap_block is true" do
         it "should be valid for empty hash" do
-          RatifierTest.new({}){ 
+          RatifierTest.new(empty_hash){ 
             is_not_empty(:unwrap_block => true) do
               # Nothing to validate, wrapper ignored
             end
@@ -56,139 +58,163 @@ describe "Ratatouille::HashMethods" do
   end
 
   describe "choice_of" do
-    it "should be valid with no :choice_size given" do
-      RatifierTest.new({:foo => "bar"}) {
-        choice_of(:key_list => [:foo, :bar])
-      }.should be_valid
+    context "with default options" do
+      it "should be valid with no :choice_size given" do
+        RatifierTest.new({:foo => "bar"}) {
+          choice_of(:key_list => [:foo, :bar])
+        }.should be_valid
+      end
+
+      it "should be invalid if key list is empty" do
+        RatifierTest.new(empty_hash) { 
+          choice_of(:choice_size => 1, :key_list => []) 
+        }.should_not be_valid
+      end
+
+      it "should be invalid if choice size less than 1" do
+        RatifierTest.new(empty_hash) { 
+          choice_of(:choice_size => 0, :key_list => [:foo]) 
+        }.should_not be_valid
+      end
+
+      it "should be invalid if choice list is not 1 more than choice size" do
+        RatifierTest.new(empty_hash) { 
+          choice_of(:choice_size => 1, :key_list => [:foo]) 
+        }.should_not be_valid
+      end
+
+      it "should be valid when given hash has 1 key in a choice list of 2 or more" do
+        RatifierTest.new({:foo => "bar"}){ 
+          choice_of(:key_list => [:foo, :bar]) 
+        }.should be_valid
+      end
+
+      it "should be valid when given hash has 2 keys in choice list of 3 or more" do
+        RatifierTest.new({:foo => "foo", :bar => "bar"}){ 
+          choice_of(:choice_size => 2, :key_list => [:foo, :bar, :biz]) 
+        }.should be_valid
+
+        RatifierTest.new({:foo => "foo", :bar => "bar"}){ 
+          choice_of(:choice_size => 2, :key_list => [:foo, :bar, :biz, :bang]) 
+        }.should be_valid
+      end
     end
 
-    it "should be invalid if key list is empty" do
-      RatifierTest.new({}) { 
-        choice_of(:choice_size => 1, :key_list => []) 
-      }.should_not be_valid
-    end
-
-    it "should be invalid if choice size less than 1" do
-      RatifierTest.new({}) { 
-        choice_of(:choice_size => 0, :key_list => [:foo]) 
-      }.should_not be_valid
-    end
-
-    it "should be invalid if choice list is not 1 more than choice size" do
-      RatifierTest.new({}) { 
-        choice_of(:choice_size => 1, :key_list => [:foo]) 
-      }.should_not be_valid
-    end
-
-    it "should be valid when given hash has 1 key in a choice list of 2 or more" do
-      RatifierTest.new({:foo => "bar"}){ 
-        choice_of(:key_list => [:foo, :bar]) 
-      }.should be_valid
-    end
-
-    it "should be valid when given hash has 2 keys in choice list of 3 or more" do
-      RatifierTest.new({:foo => "foo", :bar => "bar"}){ 
-        choice_of(:choice_size => 2, :key_list => [:foo, :bar, :biz]) 
-      }.should be_valid
-
-      RatifierTest.new({:foo => "foo", :bar => "bar"}){ 
-        choice_of(:choice_size => 2, :key_list => [:foo, :bar, :biz, :bang]) 
-      }.should be_valid
-    end
-
-    describe "when :unwrap_block is true" do
+    context "with :unwrap_block => true" do
       it "should be valid when used on empty Hash" do
-        RatifierTest.new({}){
+        RatifierTest.new(empty_hash){
           choice_of(:key_list => [:foo, :bar], :unwrap_block => true) do
             # Nothing to validate, wrapper ignored
           end
         }.should be_valid
 
-        RatifierTest.new({}){
+        RatifierTest.new(empty_hash){
           choice_of(:key_list => [:foo, :bar]) do
             # Nothing to validate, wrapper ignored
           end
         }.should_not be_valid
       end
     end
+
+    context "with :skip => true" do
+      context "with empty hash" do
+        it "should be valid" do
+          RatifierTest.new(empty_hash){ 
+            choice_of(:key_list => [:foo, :bar], :skip => true) 
+          }.should be_valid
+        end
+      end
+    end
   end
 
   describe "required_keys" do
-    it "should be valid if Hash contains all required keys" do
-      RatifierTest.new({:foo => "foo"}) { 
-        required_keys(:key_list => [:foo, :bar]) 
-      }.should_not be_valid
-
-      RatifierTest.new({:foo => "foo", :bar => "bar"}) { 
-        required_keys(:key_list => [:foo, :bar]) 
-      }.should be_valid
-    end
-
-    it "should be invalid if Hash is empty and key list is not" do
-      RatifierTest.new({}) { 
-        required_keys(:key_list => [:foo]) 
-      }.should_not be_valid
-    end
-
-    it "should be invalid if Hash does not contain ALL keys in key list" do
-      RatifierTest.new({:foo => "foo"}) { 
-        required_keys(:key_list => [:foo, :bar]) 
-      }.should_not be_valid
-    end
-
-    describe "when :unwrap_block is true" do
-      it "should be valid when used on empty Hash" do
-        RatifierTest.new({}){
-          required_keys(:key_list => [:foo, :bar], :unwrap_block => true) do
-            # Nothing to validate, wrapper ignored
-          end
+    context "with default options" do
+      it "should be valid if Hash contains all required keys" do
+        RatifierTest.new({:foo => "foo", :bar => "bar"}) { 
+          required_keys(:key_list => [:foo, :bar]) 
         }.should be_valid
+      end
 
-        RatifierTest.new({}){
-          required_keys(:key_list => [:foo, :bar]) do
-            # Nothing to validate, wrapper ignored
-          end
+      it "should be invalid if Hash is empty and key list is not" do
+        RatifierTest.new(empty_hash) { 
+          required_keys(:key_list => [:foo]) 
         }.should_not be_valid
+      end
+
+      it "should be invalid if Hash does not contain ALL keys in key list" do
+        RatifierTest.new({:foo => "foo"}) { 
+          required_keys(:key_list => [:foo, :bar]) 
+        }.should_not be_valid
+      end
+    end
+
+    context "with :unwrap_block => true" do
+      context "when used on empty Hash" do
+        it "should be valid" do
+          RatifierTest.new(empty_hash){
+            required_keys(:key_list => [:foo, :bar], :unwrap_block => true) {}
+          }.should be_valid
+        end
+
+        it "should enter block with required keys" do
+          entered_block = false
+          RatifierTest.new(empty_hash){
+            required_keys(:key_list => [:foo, :bar], :unwrap_block => true) do 
+              entered_block = true
+            end
+          }
+          entered_block.should be_true
+        end
+      end
+    end
+
+    context "with :skip => true" do
+      it "should be valid if Hash does not contain all required keys" do
+        RatifierTest.new({:foo => "foo"}) { 
+          required_keys(:key_list => [:foo, :bar], :skip => true) 
+        }.should be_valid
       end
     end
   end
 
   describe "required_key" do
-    it "should be invalid when given a key for an empty hash" do
-      RatifierTest.new({}){ required_key(:foo) }.should_not be_valid
-    end
-
-    it "should be invalid when given a key that doesn't exist in the hash" do
-      RatifierTest.new({:foo => "foo"}){ required_key(:bar) }.should_not be_valid
-    end
-
-    it "should not progress into block if invalid" do
-      f = false
-      RatifierTest.new({}) do
-        required_key(:foo) { f = true }
+    context "with default options" do
+      it "should be invalid when given a key for an empty hash" do
+        RatifierTest.new({}){ required_key(:foo) }.should_not be_valid
       end
-      f.should be_false
-    end
 
-    it "should change the scope name to default to the key if no name passed as option" do
-      n = ""
-      RatifierTest.new({:foo => "bar"}) do
-        required_key(:foo) { n = name }
+      it "should be invalid when given a key that doesn't exist in the hash" do
+        RatifierTest.new({:foo => "foo"}){ required_key(:bar) }.should_not be_valid
       end
-      n.should == ":foo"
+
+      it "should not progress into block if invalid" do
+        f = false
+        RatifierTest.new({}) do
+          required_key(:foo) { f = true }
+        end
+        f.should be_false
+      end
+
+      it "should change the scope name to default to the key if no name passed as option" do
+        n = ""
+        RatifierTest.new({:foo => "bar"}) do
+          required_key(:foo) { n = name }
+        end
+        n.should == ":foo"
+      end
     end
 
-    describe "when :unwrap_block is true" do
-      it "should be valid when used on empty Hash" do
+    context "with :unwrap_block => true" do
+      it "should be invalid when used on empty Hash" do
         RatifierTest.new({}){
           required_key(:foo, :unwrap_block => true) do
             # Nothing to validate, wrapper ignored
           end
-        }.should be_valid
+        }.should_not be_valid
       end
     end
 
-    describe "when :is_a is given" do
+    describe "with :is_a" do
       it "should be valid with matching key value class" do
         RatifierTest.new({:foo => "bar"}){
           required_key(:foo, :class => String) do

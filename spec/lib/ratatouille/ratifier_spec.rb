@@ -144,13 +144,41 @@ describe Ratatouille::Ratifier do
   end
 
   describe "is_boolean" do
-    [true, false].each do |b|
-      it "should enter block for #{b} value" do
+    context "with default options" do
+      [true, false].each do |b|
+        it "should enter block for #{b} value" do
+          block_entered = false
+          RatifierTest.new(b) do
+            is_boolean { block_entered = true }
+          end
+          block_entered.should be_true
+        end
+      end
+
+      it "should not enter block for non-boolean value" do
         block_entered = false
-        RatifierTest.new(b) do
+        RatifierTest.new("foo") do
           is_boolean { block_entered = true }
         end
+        block_entered.should be_false
+      end
+    end
+
+    context "with :unwrap_block => true" do
+      it "should enter block if ratifiable object is NOT boolean" do
+        block_entered = false
+        RatifierTest.new("foo") do 
+          is_boolean(:unwrap_block => true) { block_entered = true }
+        end
         block_entered.should be_true
+      end
+    end
+
+    context "with :skip => true" do
+      it "should be valid even if validation says otherwise" do
+        RatifierTest.new("foo") { 
+          is_boolean(:skip => true) 
+        }.should be_valid
       end
     end
   end

@@ -6,21 +6,23 @@ module Ratatouille
     # Iterator method to encapsulate validation
     #
     # @note Method will NOT work without a block
-    # @param [Hash] options
-    # @option options [Hash] :each 
-    #   options to pass to ratifier for each item in array
-    # @option options [Integer] :min_length
-    # @option options [Integer] :max_length
+    # @param [Hash] options 
+    #   Accepts global options in addition to the following:
+    # @option options [Hash] :name (array_item)
+    #   Name each ratifiable object for use in validation message.
     # @return [void]
     def ratify_each(options={}, &block)
-      if block_given?
-        item_name = options[:name] || "array_item"
-        @ratifiable_object.each_with_index do |obj, i|
-          options[:name] = "#{item_name}"
-          child_object = Ratatouille::Ratifier.new(obj, options, &block)
-          @errors["/"] << child_object.errors unless child_object.valid?
+      parse_options(options)
+
+      unless @skip
+        if block_given?
+          @ratifiable_object.each_with_index do |obj, i|
+            options[:name] = options.fetch(:name, "array_item")
+            child_object = Ratatouille::Ratifier.new(obj, options, &block)
+            @errors["/"] << child_object.errors unless child_object.valid?
+          end
         end
-      end
+      end#skip
     end#ratify_each
 
 
@@ -33,14 +35,7 @@ module Ratatouille
     #   Useless unless block provided
     # @return [void]
     def min_length(min_size=0, options={}, &block)
-      parse_options(options)
-
-      unless @unwrap_block == true
-        # Wrapped Validation
-        return unless valid_min_length?(min_size)
-      end
-
-      instance_eval(&block) if block_given?
+      return length_between(min_size, nil, options, &block)
     rescue Exception => e
       validation_error("#{e.message}")
     end#min_length
@@ -55,14 +50,7 @@ module Ratatouille
     #   Useless unless block provided
     # @return [void]
     def max_length(max_size=0, options={}, &block)
-      parse_options(options)
-
-      unless @unwrap_block == true
-        # Wrapped Validation
-        return unless valid_max_length?(max_size)
-      end
-
-      instance_eval(&block) if block_given?
+      return length_between(0, max_size, options, &block)
     rescue Exception => e
       validation_error("#{e.message}")
     end#max_length
@@ -80,73 +68,44 @@ module Ratatouille
     def length_between(min_size=0, max_size=nil, options={}, &block)
       parse_options(options)
 
-      unless @unwrap_block == true
-        # Wrapped Validation
-        return unless valid_min_length?(min_size)
-
-        if max_size.nil?
-          if min_size == 1
-            validation_error("Consider using is_not_empty")
-            return
-          end
-        else
-          return unless valid_max_length?(max_size)
-
-          if max_size == 0 && min_size == 0
-            validation_error("Consider using is_empty")
+      unless @skip == true
+        unless @unwrap_block == true
+          # Minimum Length Validation
+          unless min_size.to_i >= 0
+            validation_error("min_length must be a number greater than or equal to 0")
             return
           end
 
-          unless max_size > min_size
-            validation_error("max_size must be greater than min_size")
+          unless @ratifiable_object.size >= min_size.to_i
+            validation_error("length must be #{min_size} or more") 
             return
           end
-        end
-      end
 
-      instance_eval(&block) if block_given?
+          # Maximum Length Validation
+          unless max_size.nil?
+            unless max_size.to_i >= 0
+              validation_error("max_size must be a number greater than or equal to 0")
+              return
+            end
+
+            if @ratifiable_object.size > max_size.to_i
+              validation_error("length must be less than #{max_size.to_i}")
+              return
+            end
+
+            unless max_size > min_size
+              validation_error("max_size must be greater than min_size")
+              return
+            end
+          end
+        end#unwrap_block
+
+        instance_eval(&block) if block_given?
+      end#skip
     rescue Exception => e
       validation_error("#{e.message}")
     end#length_between
 
-  private
-
-    # @note Supporting Method
-    # @return [Boolean]
-    def valid_min_length?(min_size)
-      unless min_size.to_i >= 0
-        validation_error("min_length must be a number greater than or equal to 0")
-        return false
-      end
-
-      unless @ratifiable_object.size >= min_size.to_i
-        validation_error("length must be #{min_size} or more") 
-        return false
-      end
-      return true
-    rescue Exception => e
-      validation_error("#{e.message}")
-      return false
-    end
-
-    # @note Supporting Method
-    # @return [Boolean]
-    def valid_max_length?(max_size)
-      unless max_size.to_i >= 0
-        validation_error("max_size must be a number greater than or equal to 0")
-        return false
-      end
-
-      if @ratifiable_object.size > max_size.to_i
-        validation_error("length must be less than #{max_size.to_i}")
-        return false
-      end
-
-      return true
-    rescue Exception => e
-      validation_error("#{e.message}")
-      return false
-    end
   end#ArrayMethods
 
-end
+end#module
