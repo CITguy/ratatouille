@@ -1,0 +1,187 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Ratatouille by CITguy</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/respond.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+      <div id="header">
+        <nav>
+          <li class="fork"><a href="https://github.com/CITguy/ratatouille">View On GitHub</a></li>
+          <li class="downloads"><a href="https://github.com/CITguy/ratatouille/zipball/master">ZIP</a></li>
+          <li class="downloads"><a href="https://github.com/CITguy/ratatouille/tarball/master">TAR</a></li>
+          <li class="title">DOWNLOADS</li>
+        </nav>
+      </div><!-- end header -->
+
+    <div class="wrapper">
+
+      <section>
+        <div id="title">
+          <h1>Ratatouille</h1>
+          <p>DSL for validation of complex Hashes</p>
+          <hr>
+          <span class="credits left">Project maintained by <a href="https://github.com/CITguy">CITguy</a></span>
+          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="http://twitter.com/#!/michigangraham">mattgraham</a></span>
+        </div>
+
+        <h1>Ratatouille</h1>
+
+<p>DSL for validation of complex Hashes</p>
+
+<h2>Travis CI Status:</h2>
+
+<p><a href="http://travis-ci.org/CITguy/ratatouille"><img src="https://secure.travis-ci.org/CITguy/ratatouille.png?branch=master" alt="Build Status"></a></p>
+
+<h2>Installation</h2>
+
+<p>Add this line to your application's Gemfile:</p>
+
+<pre><code>gem 'ratatouille'
+</code></pre>
+
+<p>And then execute:</p>
+
+<pre><code>$ bundle
+</code></pre>
+
+<p>Or install it yourself as:</p>
+
+<pre><code>$ gem install ratatouille
+</code></pre>
+
+<h2>Information</h2>
+
+<p>Specific uses and syntax can be found in the documentation of each module. The information defined
+here is common information amongst the entirety of the ratatouille gem.</p>
+
+<h2>Blocks</h2>
+
+<p>All of the given methods accept a block for validation and will not progress into the block if the core method logic does not validate.
+However, some methods may be used without a block and validation will progress whether or not the method logic validates.</p>
+
+<h3>ratifiable_object</h3>
+
+<p>Within a block, the ratifiable_object method provides the object that is to be validated against.
+This will change when using <em>given_key</em>.</p>
+
+<h3>name</h3>
+
+<p>Within a block, the <strong>name</strong> method provides the name of the scope. 
+This can be used in your custom validation messages and is already prepended to the beginning
+of every validation error.</p>
+
+<h2>Custom Validation</h2>
+
+<p><strong>Return to this section after reading the remaining sections.</strong></p>
+
+<p>Custom validation can take place using the following methods to generate custom validation logic that cannot be satisfied with the existing methods.</p>
+
+<p>You should use the <strong>validation_error</strong> method to add your own errors to the Ratifier object.</p>
+
+<h3>validation_error</h3>
+
+<p>Used to insert validation error message into the Ratifier object.</p>
+
+<ul>
+<li>Scope name prepended to every validation error</li>
+</ul><h4>Syntax</h4>
+
+<p>It is also possible to set the context of an error by passing in a second argument. 
+However, it defaults to the root of the current ratifiable_object ('/').</p>
+
+<div class="highlight">
+<pre>    <span class="n">validation_error</span><span class="p">(</span><span class="s2">"This is an error"</span><span class="p">)</span>
+    <span class="n">validation_error</span><span class="p">(</span><span class="s2">"This is an error"</span><span class="p">,</span> <span class="s2">"current_context"</span><span class="p">)</span>
+</pre>
+</div>
+
+
+<h2>Universal Options</h2>
+
+<h3>:unwrap_block</h3>
+
+<p>This optional key, when set to true, will skip the wrapped validation provided in the called
+method and run the validations contained in its given block (if any). This is useful
+if previous validation results dictate further validation logic.</p>
+
+<h4>Example</h4>
+
+<p><em>A choice of :bar or :biz is required only if :foo is 'green', 
+otherwise :bar and :biz should be validated if they are present.</em></p>
+
+<div class="highlight">
+<pre>  <span class="n">ratify</span><span class="p">({</span><span class="ss">:foo</span> <span class="o">=&gt;</span> <span class="s2">"red"</span><span class="p">})</span> <span class="k">do</span>
+    <span class="n">required_key</span><span class="p">(</span><span class="ss">:foo</span><span class="p">)</span> <span class="k">do</span>
+      <span class="n">unwrap_choice</span> <span class="o">=</span> <span class="kp">true</span>
+      <span class="n">unwrap_choice</span> <span class="o">=</span> <span class="kp">false</span> <span class="k">if</span> <span class="n">ratifiable_object</span> <span class="o">==</span> <span class="s1">'green'</span>
+    <span class="k">end</span>
+
+    <span class="c1"># Because :foo is 'red', choice_of logic will be ignored and the block will be entered.</span>
+    <span class="n">choice_of</span><span class="p">(</span><span class="ss">:key_list</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="ss">:bar</span><span class="p">,</span> <span class="ss">:biz</span><span class="o">]</span><span class="p">,</span> <span class="ss">:unwrap_block</span> <span class="o">=&gt;</span> <span class="n">unwrap_choice</span><span class="p">)</span> <span class="k">do</span>
+      <span class="n">given_key</span><span class="p">(</span><span class="ss">:bar</span><span class="p">)</span> <span class="k">do</span>
+        <span class="c1"># :bar validation</span>
+      <span class="k">end</span>
+      <span class="n">given_key</span><span class="p">(</span><span class="ss">:biz</span><span class="p">)</span> <span class="k">do</span>
+        <span class="c1"># :biz validation</span>
+      <span class="k">end</span>
+    <span class="k">end</span>
+
+    <span class="c1"># If :foo were 'green', choice_of logic would be performed before entering the block.</span>
+  <span class="k">end</span>
+</pre>
+</div>
+
+
+<h2>Advanced Example</h2>
+
+<div class="highlight">
+<pre>    <span class="kp">include</span> <span class="no">Ratatouille</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">ratify</span><span class="p">({</span><span class="ss">:foo</span> <span class="o">=&gt;</span> <span class="p">{</span><span class="ss">:bar</span> <span class="o">=&gt;</span> <span class="p">{</span><span class="ss">:biz</span> <span class="o">=&gt;</span> <span class="s2">"bang"</span><span class="p">}}})</span> <span class="k">do</span>
+      <span class="n">is_not_empty</span>
+      <span class="n">given_key</span><span class="p">(</span><span class="ss">:foo</span><span class="p">)</span> <span class="k">do</span>
+        <span class="n">validation_error</span><span class="p">(</span><span class="s2">":foo error"</span><span class="p">)</span>
+        <span class="n">given_key</span><span class="p">(</span><span class="ss">:bar</span><span class="p">)</span> <span class="k">do</span>
+          <span class="n">validation_error</span><span class="p">(</span><span class="s2">":bar error"</span><span class="p">)</span>
+          <span class="n">given_key</span><span class="p">(</span><span class="ss">:biz</span><span class="p">)</span> <span class="k">do</span>
+            <span class="k">if</span> <span class="n">ratifiable_object</span> <span class="o">==</span> <span class="s2">"bang"</span>
+              <span class="n">validation_error</span><span class="p">(</span><span class="s2">"should be 'shoot'"</span><span class="p">)</span>
+            <span class="k">end</span>
+          <span class="k">end</span>
+        <span class="k">end</span>
+      <span class="k">end</span>
+    <span class="k">end</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">valid?</span> <span class="c1"># =&gt; false</span>
+</pre>
+</div>
+
+
+<h2>Contributing</h2>
+
+<ol>
+<li>Fork it</li>
+<li>Create your feature branch (<code>git checkout -b my-new-feature</code>)</li>
+<li>Commit your changes (<code>git commit -am 'Added some feature'</code>)</li>
+<li>Push to the branch (<code>git push origin my-new-feature</code>)</li>
+<li>Create new Pull Request</li>
+</ol>
+      </section>
+
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><!--<![endif]-->
+    
+  </body>
+</html>
