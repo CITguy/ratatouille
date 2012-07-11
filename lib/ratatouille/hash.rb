@@ -41,7 +41,7 @@ module Ratatouille
           unless @unwrap_block == true
             unless @is_a.nil?
               unless @is_a === @ratifiable_object[key]
-                validation_error("key value is not of type #{@is_a}")
+                validation_error("value is not of type #{@is_a}", key.to_s)
                 return
               end
             end

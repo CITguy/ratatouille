@@ -1,3 +1,9 @@
+## 1.4.3
+
+### Updates
+
+* Fixing error array output so that it is actually useful and readable.
+
 ## 1.4.2
 
 ### Corrections

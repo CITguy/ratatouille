@@ -77,12 +77,6 @@ describe Ratatouille::Ratifier do
         validation_error("some error")
       end
       test.errors_array.should have(1).String
-
-      test = RatifierTest.new({}) do
-        validation_error("some error")
-        validation_error("another error")
-      end
-      test.errors_array.should have(2).String
     end
 
     it "should not create an error when called with a non-string argument" do

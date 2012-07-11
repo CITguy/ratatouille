@@ -40,7 +40,7 @@ module Ratatouille
     # @return [String]
     def name
       @name ||= @ratifiable_object.class.to_s
-    end
+    end#name
 
 
     # Set name of instance
@@ -53,22 +53,22 @@ module Ratatouille
         @name = namein unless namein.blank?
       end
       @name
-    end
+    end#name=
 
 
     # Add validation error. Useful for custom validations.
     # @param [String] err_in
     # @param [String] context
     # @return [void]
-    def validation_error(err_in, context="/")
+    def validation_error(err_in, context="/" )
       case err_in
       when String
         return if err_in.blank?
         @errors[context] = [] unless @errors[context]
-        @errors[context] << "#{@name}: #{err_in}"
+        @errors[context] << err_in
       end
     rescue Exception => e
-      @errors["/"] << "#{@name}: #{e.message}"
+      @errors[context] << "#{e.message}"
     end#validation_error
 
 
@@ -104,7 +104,7 @@ module Ratatouille
           else []
           end
 
-          all_errs << namespace_error_array(item_errs, "[#{i}]")
+          all_errs << namespace_error_array(item_errs, "#{i}")
           all_errs.flatten!
         end
       when Hash
@@ -159,7 +159,7 @@ module Ratatouille
           when TrueClass, FalseClass 
             # OK to enter block
           else 
-            validation_error("object is not a boolean")
+            validation_error("#{name} is not a boolean")
             return
           end
         end
@@ -204,14 +204,14 @@ module Ratatouille
         when id.to_s =~ /^is_not_(.*)$/
           if @ratifiable_object.respond_to?("#{$1}?")
             if @ratifiable_object.send("#{$1}?") == true
-              validation_error("is #{$1}")
+              validation_error("#{name} is #{$1}")
               return
             end
           end
         when id.to_s =~ /^is_(.*)$/
           if @ratifiable_object.respond_to?("#{$1}?")
             if @ratifiable_object.send("#{$1}?") == false
-              validation_error("is not #{$1}")
+              validation_error("#{name} is not #{$1}")
               return
             end
           end
