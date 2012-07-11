@@ -1,3 +1,9 @@
+## 1.4.1
+
+### Corrections
+
+* BUG FIX: Exception when trying to call #collect on an error string instead of an error array.
+
 ## 1.4.0
 
 ### Updates

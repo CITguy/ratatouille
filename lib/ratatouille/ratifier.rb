@@ -236,7 +236,7 @@ module Ratatouille
     # @param [String,Symbol] namespace
     # @return [Array]
     def namespace_error_array(arr=[], namespace="")
-      errs_out = arr.collect do |e|
+      errs_out = Array(arr).collect do |e|
         split_err = e.split("|")
 
         ctxt, err = "", e
