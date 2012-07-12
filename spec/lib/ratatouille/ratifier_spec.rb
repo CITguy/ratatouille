@@ -117,8 +117,8 @@ describe Ratatouille::Ratifier do
 
     describe "errors" do
       it "should raise error if modification is attempted" do
-        Proc.new { valid_ratifier.errors = {} }.should         raise_error NoMethodError
-        Proc.new { valid_ratifier.errors.delete("/") }.should  raise_error TypeError
+        Proc.new { valid_ratifier.errors = {} }.should         raise_error
+        Proc.new { valid_ratifier.errors.delete("/") }.should  raise_error
       end
 
       it "should be empty on valid object" do

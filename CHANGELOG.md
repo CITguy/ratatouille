@@ -1,3 +1,9 @@
+## 1.4.3.1
+
+### Corrections
+
+* Fix spec definition. Apparently Ruby 1.9.x throws a different exception type when trying to modify a frozen hash.
+
 ## 1.4.3
 
 ### Updates
