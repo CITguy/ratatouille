@@ -1,10 +1,9 @@
 # Ratatouille 
+[![Gem Version](https://badge.fury.io/rb/ratatouille.png)](http://badge.fury.io/rb/ratatouille)
+[![Build Status](https://secure.travis-ci.org/CITguy/ratatouille.png?branch=master)](http://travis-ci.org/CITguy/ratatouille)
+[![Dependency Status](https://gemnasium.com/CITguy/ratatouille.svg)](https://gemnasium.com/CITguy/ratatouille)
 
 DSL for validation of complex Hashes
-
-## Travis CI Status: 
-[![Build Status](https://secure.travis-ci.org/CITguy/ratatouille.png?branch=master)](http://travis-ci.org/CITguy/ratatouille)
-
 
 ## Installation
 
